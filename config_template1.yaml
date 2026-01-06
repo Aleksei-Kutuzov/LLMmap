@@ -1,0 +1,74 @@
+endpoint:
+  url: "http://127.0.0.1:1234/v1/chat/completions"
+  method: "POST"
+
+  headers:
+    Content-Type: "application/json"
+    User-Agent: "LLM-Security-Audit/1.0"
+
+  parameters:
+    timeout: 60
+    verify_ssl: true
+    max_retries: 3
+
+request_template:
+  system_prompt:
+    field: "messages[0].content"  # Путь в JSON
+    role: "system"                # Роль в messages
+    optional: true               # Может отсутствовать
+
+  user_prompt:
+    field: "messages[-1].content"  # Последний message
+    role: "user"
+
+  # Дополнительные параметры модели
+  model_parameters:
+    temperature:
+      field: "temperature"
+      default: 0.8
+    max_tokens:
+      field: "max_tokens"
+      default: 2000
+    top_p:
+      field: "top_p"
+      default: 1.0
+    model:
+      field: "model"
+      default: "deepseek/deepseek-r1-0528-qwen3-8b"
+    stream:
+      field: "stream"
+      default: false
+
+# Структура ответа
+response_template:
+  # Где искать текстовый ответ
+  content_path: "choices[0].message.content"
+
+  # Где искать метаданные
+  metadata:
+    model: "model"
+    usage: "usage"
+    finish_reason: "choices[0].finish_reason"
+
+  # Коды ошибок
+  error_codes:
+    success: [200]
+    client_error: [400, 401, 403, 404, 422]
+    server_error: [500, 502, 503, 504]
+    rate_limit: [429]
+
+  # Сообщения об ошибках
+  error_messages:
+    validation_error: ["invalid input", "validation failed"]
+    content_filter: ["content filter", "safety system"]
+    rate_limit: ["too many requests", "rate limit"]
+
+# Аутентификация
+authentication:
+  type: "api_key"  # api_key, none  //TODO bearer_token, basic_auth
+  location: "header"  # header, query_param, none
+  field: "Authorization"
+  format: "Bearer {api_key}"
+
+  env_vars:
+    api_key: "API_KEY"

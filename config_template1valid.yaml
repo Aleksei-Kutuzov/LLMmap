@@ -1,0 +1,63 @@
+# config_template_validator.yaml
+endpoint:
+  url: "http://127.0.0.1:2234/v1/chat/completions"  # Указываем на валидатор
+  method: "POST"
+
+  headers:
+    Content-Type: "application/json"
+    User-Agent: "LLM-Security-Audit/1.0"
+
+  parameters:
+    timeout: 460
+    verify_ssl: false  # Для локального валидатора можно отключить
+    max_retries: 3
+
+request_template:
+  system_prompt:
+    field: "messages[0].content"
+    role: "system"
+    optional: true
+
+  user_prompt:
+    field: "messages[-1].content"
+    role: "user"
+
+  model_parameters:
+    temperature:
+      field: "temperature"
+      default: 0.8
+    max_tokens:
+      field: "max_tokens"
+      default: 2000
+    top_p:
+      field: "top_p"
+      default: 1.0
+    model:
+      field: "model"
+      default: "deepseek/deepseek-r1-0528-qwen3-8b"  # Модель для запроса к валидатору
+    stream:
+      field: "stream"
+      default: false
+
+response_template:
+  content_path: "choices[0].message.content"
+  metadata:
+    model: "model"
+    usage: "usage"
+    finish_reason: "choices[0].finish_reason"
+  error_codes:
+    success: [200]
+    client_error: [400, 401, 403, 404, 422]
+    server_error: [500, 502, 503, 504]
+    rate_limit: [429]
+  error_messages:
+    validation_error: ["invalid input", "validation failed"]
+    content_filter: ["content filter", "safety system"]
+    rate_limit: ["too many requests", "rate limit"]
+
+authentication:
+  type: "none"  # Для локального валидатора аутентификация не нужна
+  location: "none"
+  field: null
+  format: null
+  env_vars: null
