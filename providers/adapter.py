@@ -68,7 +68,7 @@ class Adapter():
             "content": user_prompt
         })
 
-        payload = {"messages": messages}
+        payload = {"messages": messages, "model": self.config.request.model.get("default")}
 
         model_params = {
             'temperature': self.config.request.temperature,
@@ -239,6 +239,7 @@ class Adapter():
 
 if __name__ == "__main__":
     config = config_load(r"C:\Users\Admin\PycharmProjects\LLMmap\config_template1.yaml", {})
+    # config = config_load(r"C:\Users\Admin\PycharmProjects\LLMmap\config_deepseek_openrouter.yaml", {"api_key": orak})
     adapter = Adapter(config)
 
     t = adapter.query(user_prompt="hello", system_prompt="отвечай кратко")

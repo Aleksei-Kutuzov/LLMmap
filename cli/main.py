@@ -4,6 +4,8 @@ import json
 
 from core.load_tests import load_tests, TestsConfig, TestCase
 from core.scanner import LLMSecurityScanner
+from parser.parser import LLMTestParser
+from utils.logging import success
 
 app = typer.Typer(help="LLM Vulnerability Scanner", rich_markup_mode="rich")
 
@@ -46,9 +48,8 @@ def list_tests(category: str | None = typer.Option(None, "--category", "-c",
 
 @app.command()
 def scan(adapter_config: str = typer.Argument( ..., help="Путь к конфигурационному файлу адаптера (YAML)"),
-        concurrent: int = typer.Option(
-             2,
-                    help="Максимальное количество параллельных тестов")):
+        concurrent: int = typer.Option(2, help="Максимальное количество параллельных тестов")):
+
         tests_config = TestsConfig(
             test_suites_path=Path(r"C:\Users\Admin\PycharmProjects\LLMmap\test_suites"),
             max_concurrent_tests=concurrent
@@ -56,3 +57,33 @@ def scan(adapter_config: str = typer.Argument( ..., help="Путь к конфи
 
         scanner = LLMSecurityScanner(Path(adapter_config), tests_config)
         scanner.run_scan()
+
+
+@app.command()
+def parse(source: str = typer.Argument(..., help="Источник: URL или путь к файлу"),
+          output: str = typer.Option("test_suites", help="Выходная директория"),
+          filename: str = typer.Option("filename", help="Имя выходного файла"),
+          id_field: str = typer.Option("id", help="Поле для ID"),
+          name_field: str = typer.Option("name", help="Поле для названия"),
+          prompt_field: str = typer.Option("user_prompt", help="Поле для промпта"),
+          category_field: str = typer.Option("category", help="Поле для категории"),
+          severity_field: str = typer.Option("severity", help="Поле для серьезности"),
+          limit: int = typer.Option(0, help="Лимит тестов (0 = без лимита)")):
+    """Парсит тесты безопасности LLM из различных источников."""
+    parser = LLMTestParser()
+
+    mapping = {
+        "id": id_field,
+        "name": name_field,
+        "user_prompt": prompt_field,
+        "category": category_field,
+        "severity": severity_field,
+        # опциональные
+        "description": "description",
+        "system_prompt": "system_prompt",
+        "temperature": "temperature",
+        "max_tokens": "max_tokens"
+    }
+
+    count = parser.parse(source, output, mapping, filename, limit=limit)
+    success(f"Total processed: {count} tests")

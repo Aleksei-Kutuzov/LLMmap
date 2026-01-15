@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from typing import Dict, Any, Optional, List
-from unittest import load_tests
 
 import typer
 from pydantic import BaseModel, Field
