@@ -1,7 +1,7 @@
-from providers.adapter import Adapter
-from providers.config.config_load import config_load
+from core.providers.adapter import Adapter
+from core.providers.config.config_load import config_load
 
-config = config_load(r'C:\Users\Admin\PycharmProjects\LLMmap\config_template1valid.yaml', {})
+config = config_load(r'/config_1valid.yaml', {})
 adapter = Adapter(config)
 
 try:

@@ -7,7 +7,7 @@ endpoint:
     User-Agent: "LLM-Security-Audit/1.0"
 
   parameters:
-    timeout: 60
+    timeout: 260
     verify_ssl: true
     max_retries: 3
 

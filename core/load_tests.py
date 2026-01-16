@@ -1,13 +1,13 @@
 import json
 import os
-import statistics
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, List
 
-import typer
 from pydantic import BaseModel, Field
+
+from core.utils.logging import success, error
 
 
 @dataclass
@@ -39,19 +39,13 @@ class Severity(str, Enum):
     CRITICAL = "critical"
 
 
-standards_category = ["prompt_injection",
-                     "rag",
-                     "llmjacking",
-                     "data_leakage",
-                     "configuration",
-                     "output_validation",
-                     "data_exfiltration"]
 class TestsConfig(BaseModel):
-    enabled_categories: List[str] = Field(default=[cat for cat in standards_category])
+    enabled_categories: List[str] | str = Field(default="all")
     severity_filter: List[Severity] = Field(default=[s for s in Severity])
     test_suites_path: Path = Field(default=Path("./test_suites"))
     custom_tests_path: Path | None = Field(default=None)
     max_concurrent_tests: int = Field(default=5, ge=1, le=50)
+
 
 def load_test_suite_file(path: Path) -> List[TestCase] | None:
     test_cases: List[TestCase] = []
@@ -80,16 +74,17 @@ def load_test_suite_file(path: Path) -> List[TestCase] | None:
                 test_cases.append(test_case)
 
             except KeyError as e:
-                typer.secho(f"{test_data['id']} not found line: {e}", fg="red")
+                error(f"{test_data['id']} not found line: {e}")
                 continue
             except Exception as e:
-                typer.secho(f"Error of loading test suite: {e}", fg="red")
+                error(f"Error of loading test suite: {e}")
                 continue
 
         return test_cases
 
 def load_tests(test_config: TestsConfig):
     test_cases = {}
+    categories: List[str] = []
 
     paths_to_load: List[Path] = []
 
@@ -100,50 +95,52 @@ def load_tests(test_config: TestsConfig):
         paths_to_load.append(test_config.custom_tests_path)
 
     if not paths_to_load:
-        typer.secho("No dirs tests found", fg="red")
+        error("No dirs tests found")
 
     for test_path in paths_to_load:
         if not os.path.exists(test_path):
-            typer.secho(f"Dir {test_path.name} no found", fg="red")
+            error(f"Dir {test_path.name} no found")
 
         json_files = list(test_path.glob("*.json"))
 
         if not json_files:
-            typer.secho(f"No json files found in directory {test_path}", fg="red")
+            error(f"No json files found in directory {test_path}")
             return test_cases
 
         for json_file in json_files:
-            category_name = json_file.stem
-
-            if category_name not in test_config.enabled_categories:
-                continue
-
             loaded_cases = load_test_suite_file(json_file)
             if not loaded_cases:
                 continue
 
             filtered_cases = []
             for test_case in loaded_cases:
+                if test_config.enabled_categories != "all":
+                    if test_case.category not in test_config.enabled_categories:
+                        continue
                 try:
                     test_severity = Severity(test_case.severity.lower())
                     if test_severity in test_config.severity_filter:
                         filtered_cases.append(test_case)
                 except ValueError:
-                    typer.secho(f"Unknown severity '{test_case.severity}' in test {test_case.id}", fg="red")
+                    error(f"Unknown severity '{test_case.severity}' in test {test_case.id}")
                     continue
 
             if not filtered_cases:
-                typer.secho(f"  There are no tests with the appropriate severity in {category_name}", fg="red")
+                error(f"  There are no tests with the appropriate severity in {json_file}")
                 continue
 
-            if category_name not in test_cases:
-                test_cases[category_name] = []
-            test_cases[category_name].extend(filtered_cases)
+            for case in filtered_cases:
+                if case.category not in test_cases:
+                    test_cases[case.category] = []
+                test_cases[case.category].append(case)
 
-            if json_file.name.replace(".json", "") in test_config.enabled_categories:
+            if test_config.enabled_categories != "all":
+                if json_file.name.replace(".json", "") in test_config.enabled_categories:
+                    test_cases[json_file.name.replace(".json", "")] = load_test_suite_file(json_file)
+            else:
                 test_cases[json_file.name.replace(".json", "")] = load_test_suite_file(json_file)
 
-            typer.secho(f"Successfully {len(filtered_cases)}/{len(loaded_cases)} tests in category '{category_name}'", fg="green")
+            success(f"Successfully {len(filtered_cases)}/{len(loaded_cases)} tests in file '{json_file}'")
     return test_cases
 
 

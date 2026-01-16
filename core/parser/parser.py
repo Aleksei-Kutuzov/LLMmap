@@ -2,10 +2,9 @@ import csv
 import json
 import requests
 from pathlib import Path
-from typing import Dict, List, Any, Optional
-import typer
+from typing import Dict, List, Optional
 
-from utils.logging import info, error, warning, success
+from core.utils.logging import info, error, warning, success
 
 
 class LLMTestParser:
@@ -84,7 +83,6 @@ class LLMTestParser:
     def transform_test(self, item: Dict, mapping: Dict) -> Optional[Dict]:
         try:
             result = {}
-
             for target_field, source_field in mapping.items():
                 if source_field and source_field in item:
                     result[target_field] = item[source_field]
@@ -123,12 +121,11 @@ class LLMTestParser:
             error(f"Error of data transform: {e}")
             return None
 
-    def parse(self,
-              source: str,
-              output: str = "test_suites",
-              mapping: Optional[Dict] = None,
-              filename: str = "parsed",
-              limit: int = 0) -> int:
+    def parse(self, source: str,
+                    output: str = "test_suites",
+                    mapping: Optional[Dict] = None,
+                    filename: str = "parsed",
+                    limit: int = 0) -> int:
         info(f"Parsing from source: {source}")
 
         source_data = self.load_data(source)

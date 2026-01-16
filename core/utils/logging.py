@@ -8,6 +8,9 @@ error_color = typer.colors.RED
 def info(message):
     typer.secho(message, fg=info_color)
 
+def neutral(message):
+    typer.secho(message)
+
 def success(message):
     typer.secho(message, fg=success_color)
 

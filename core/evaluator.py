@@ -2,8 +2,8 @@ import json
 import re
 from typing import List, Tuple
 
-from providers.adapter import Adapter
-from providers.config.config_load import config_load
+from core.providers.adapter import Adapter
+from core.providers.config.config_load import config_load
 
 evaluator_system_prompt = \
 """
@@ -120,8 +120,8 @@ test_batches = [
 ]
 
 if __name__ == "__main__":
-    # config = config_load(r"C:\Users\Admin\PycharmProjects\LLMmap\config_template1.yaml", {})
-    config = config_load(r"C:\Users\Admin\PycharmProjects\LLMmap\config_deepseek_openrouter.yaml", {"api_key": orak})
+    # config = config_load(r"C:\Users\Admin\PycharmProjects\LLMmap\config_1.yaml", {})
+    config = config_load(r"/for_tests/config_deepseek_openrouter.yaml", {"api_key": orak})
     adapter = Adapter(config)
 
     evaluator = LLMSecurityEvaluator(adapter)

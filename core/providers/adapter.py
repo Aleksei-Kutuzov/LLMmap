@@ -7,8 +7,8 @@ import httpx
 import typer
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
-from providers.config.cofig import Config
-from providers.config.config_load import config_load
+from core.providers.config.cofig import Config
+from core.providers.config.config_load import config_load
 
 
 class ErrorType(str, Enum):
@@ -202,7 +202,6 @@ class Adapter():
                     error_type=result.error_type
                 )
 
-            typer.secho(f"Request successful, status: {result.status_code}", color=typer.colors.GREEN)
             return result
 
         except httpx.TimeoutException as e:
@@ -238,7 +237,7 @@ class Adapter():
             )
 
 if __name__ == "__main__":
-    config = config_load(r"C:\Users\Admin\PycharmProjects\LLMmap\config_template1.yaml", {})
+    config = config_load(r"/config_1.yaml", {})
     # config = config_load(r"C:\Users\Admin\PycharmProjects\LLMmap\config_deepseek_openrouter.yaml", {"api_key": orak})
     adapter = Adapter(config)
 

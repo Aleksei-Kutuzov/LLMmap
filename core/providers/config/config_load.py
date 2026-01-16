@@ -3,7 +3,7 @@ from typing import Dict
 
 import yaml
 
-from providers.config.cofig import Config, Endpoint, Request, Response, Authentication
+from core.providers.config.cofig import Config, Endpoint, Request, Response, Authentication
 
 
 def config_load(filename: str, params: Dict[str, str] | None) -> Config:
